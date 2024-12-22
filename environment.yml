@@ -1,0 +1,12 @@
+name: aiformfactory-env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - numpy>=1.26.4
+  - pandas>=2.2.3
+  - pillow>=11.0.0
+  - opencv>=4.10.0
+  - scikit-learn>=1.5.2
+  - pip
