@@ -1,43 +1,41 @@
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { PersonIcon } from "@radix-ui/react-icons";
+"use client";
 
-interface StatusBarProps {
-  className?: string;
-}
+import { useEffect, useState } from "react";
+import { CheckCircle2, XCircle } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
-export function StatusBar({ className }: StatusBarProps) {
+export default function StatusBar() {
+  const [isConnected, setIsConnected] = useState(false);
+
+  useEffect(() => {
+    // Simulate connection check
+    const checkConnection = () => {
+      // Replace with actual connection check logic
+      setIsConnected(true);
+    };
+
+    checkConnection();
+    const interval = setInterval(checkConnection, 30000); // Check every 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <div
-      className={cn("flex h-12 items-center justify-between px-4", className)}
-    >
+    <div className="flex h-12 items-center justify-between border-t bg-card px-4">
       <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1">
-          <div className="h-2 w-2 rounded-full bg-green-500" />
-          <span className="text-sm text-muted-foreground">Connected</span>
-        </div>
+        {isConnected ? (
+          <>
+            <CheckCircle2 className="h-4 w-4 text-green-500" />
+            <span className="text-sm text-muted-foreground">Connected</span>
+          </>
+        ) : (
+          <>
+            <XCircle className="h-4 w-4 text-destructive" />
+            <span className="text-sm text-muted-foreground">Disconnected</span>
+          </>
+        )}
       </div>
-
-      <div className="flex items-center gap-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <PersonIcon className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Preferences</DropdownMenuItem>
-            <DropdownMenuItem>Sign out</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      <ThemeToggle />
     </div>
   );
 }

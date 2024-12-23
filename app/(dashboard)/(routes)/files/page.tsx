@@ -16,16 +16,10 @@ import {
 } from "@/components/ui/table";
 import { FileIcon, TrashIcon } from "@radix-ui/react-icons";
 import { formatDistanceToNow } from "date-fns";
+import { formatFileSize } from "@/lib/utils/form";
+import type { File } from "@/lib/validations/forms";
 
-interface FileItem {
-  id: string;
-  name: string;
-  type: string;
-  size: number;
-  uploadedAt: Date;
-}
-
-const mockFiles: FileItem[] = [
+const mockFiles: File[] = [
   {
     id: "1",
     name: "document.pdf",
@@ -41,19 +35,6 @@ const mockFiles: FileItem[] = [
     uploadedAt: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
   },
 ];
-
-function formatFileSize(bytes: number): string {
-  const units = ["B", "KB", "MB", "GB"];
-  let size = bytes;
-  let unitIndex = 0;
-
-  while (size >= 1024 && unitIndex < units.length - 1) {
-    size /= 1024;
-    unitIndex++;
-  }
-
-  return `${size.toFixed(1)} ${units[unitIndex]}`;
-}
 
 export default function FilesPage() {
   return (

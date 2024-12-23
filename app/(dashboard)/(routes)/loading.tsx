@@ -1,5 +1,3 @@
-import { Loading } from "../_components/loading";
+import Loading from "../_components/loading";
 
-export default function DashboardLoading() {
-  return <Loading />;
-}
+export default Loading;

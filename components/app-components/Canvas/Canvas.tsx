@@ -1,6 +1,13 @@
 "use client";
 
-import { memo, useCallback, useContext, useEffect, useRef } from "react";
+import React, {
+  memo,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Tooltip } from "react-tooltip";
 import classnames from "classnames";
 import { fabric } from "fabric";
@@ -17,6 +24,16 @@ const MENU_ID = "canvasContextMenu";
 // eslint-disable-next-line react/display-name
 const FabricMemo = memo(
   ({ setRef, handleCanvasInit }: { setRef: any; handleCanvasInit: any }) => {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+      setMounted(true);
+    }, []);
+
+    if (!mounted) {
+      return null;
+    }
+
     return (
       <canvas
         ref={(ref) => setRef(ref, handleCanvasInit)}
@@ -53,29 +70,39 @@ const Canvas = () => {
   } = useContext(CanvasContext);
 
   const handleCanvasInit = useCallback((canvas: fabric.Canvas) => {
-    canvas.setHeight(document.getElementById("canvasContainer").clientHeight);
-    canvas.setWidth(document.getElementById("canvasContainer").clientWidth);
-    canvas.backgroundColor = "#FFFFFF";
+    if (typeof window !== "undefined") {
+      const container = document.getElementById("canvasContainer");
+      if (container) {
+        canvas.setHeight(container.clientHeight);
+        canvas.setWidth(container.clientWidth);
+        canvas.backgroundColor = "#FFFFFF";
 
-    fabric.util.addListener(
-      document.getElementsByClassName("upper-canvas")[0] as HTMLElement,
-      "contextmenu",
-      function (options: PointerEvent) {
-        let target = canvas.findTarget(options, false);
-        if (target) {
-          // Right click on a canvas object
-          let type: string = target.type;
-          canvas.setActiveObject(target);
-          canvas.renderAll();
-          handleContextMenu(options, type);
-        } else {
-          // Right click on the canvas
-          canvas.discardActiveObject();
-          canvas.renderAll();
+        const upperCanvas = document.getElementsByClassName(
+          "upper-canvas"
+        )[0] as HTMLElement;
+        if (upperCanvas) {
+          fabric.util.addListener(
+            upperCanvas,
+            "contextmenu",
+            function (options: PointerEvent) {
+              let target = canvas.findTarget(options, false);
+              if (target) {
+                // Right click on a canvas object
+                let type = target.type || "";
+                canvas.setActiveObject(target);
+                canvas.renderAll();
+                handleContextMenu(options, type);
+              } else {
+                // Right click on the canvas
+                canvas.discardActiveObject();
+                canvas.renderAll();
+              }
+              options.preventDefault();
+            }
+          );
         }
-        options.preventDefault();
       }
-    );
+    }
   }, []);
 
   const { show, hideAll } = useContextMenu({
@@ -91,26 +118,29 @@ const Canvas = () => {
     });
   }
 
-  const openContextMenuOnMobile = (event: any) => {
-    const type = fabricCanvas.current.getActiveObjects()[0].type;
-    show({
-      event,
-      props: {
-        activeObjectType: type,
-      },
-    });
+  const openContextMenuOnMobile = (event: React.MouseEvent) => {
+    const activeObject = fabricCanvas.current?.getActiveObjects()?.[0];
+    if (activeObject?.type) {
+      show({
+        event,
+        props: {
+          activeObjectType: activeObject.type,
+        },
+      });
+    }
   };
 
   useEffect(() => {
-    const selectionCreatedHandler = (event: fabric.IEvent<MouseEvent>) => {
-      const activeSelection = event.selected;
+    const selectionCreatedHandler = (event: fabric.IEvent) => {
+      const activeSelection = event.selected || [];
       setActiveSelection(activeSelection);
     };
 
-    const selectionClearedHandler = (event: fabric.IEvent<MouseEvent>) => {
+    const selectionClearedHandler = () => {
       setActiveSelection([]);
       hideAll();
     };
+
     // Event listener for selection creation
     fabricCanvas.current?.on("selection:created", selectionCreatedHandler);
 
@@ -119,21 +149,23 @@ const Canvas = () => {
 
     return () => {
       fabricCanvas.current?.off("selection:created", selectionCreatedHandler);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
       fabricCanvas.current?.off("selection:cleared", selectionClearedHandler);
     };
-  }, [fabricCanvas, setActiveSelection]);
+  }, [fabricCanvas, setActiveSelection, hideAll]);
 
   const handleRemoveClick = () => {
-    fabricCanvas.current.getActiveObjects().forEach((obj) => {
-      fabricCanvas.current.remove(obj);
-    });
+    if (fabricCanvas.current) {
+      fabricCanvas.current.getActiveObjects().forEach((obj) => {
+        fabricCanvas.current.remove(obj);
+      });
 
-    fabricCanvas.current.discardActiveObject().requestRenderAll();
-    fabricCanvas.current.fire("object:modified");
+      fabricCanvas.current.discardActiveObject().requestRenderAll();
+      fabricCanvas.current.fire("object:modified");
+    }
   };
 
-  const inputFile = useRef(null);
+  const inputFile = useRef<HTMLInputElement>(null);
+
   return (
     <>
       {fullScreen && (
@@ -167,7 +199,12 @@ const Canvas = () => {
             id="file"
             ref={inputFile}
             className="hidden"
-            onChange={(e) => addImage(e.target.files[0])}
+            onChange={(e) => {
+              const files = e.target.files;
+              if (files && files[0]) {
+                addImage(files[0]);
+              }
+            }}
           />
         </form>
         <div id="canvasContainer" className="w-full h-full">

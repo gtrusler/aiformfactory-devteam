@@ -1,64 +1,64 @@
-import { useCallback } from "react";
-import { type FileAttachment } from "@/types/chat";
-import { SupabaseStore } from "@/lib/vectorstore/supabase_store";
+"use client";
 
-const vectorStore = new SupabaseStore(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { useState, useCallback } from "react";
+import { VectorStoreService } from "@/lib/services/vector-store";
 
-export function useVectorStore() {
-  const uploadFile = useCallback(
-    async (
-      file: File,
-      onProgress?: (progress: number) => void
-    ): Promise<FileAttachment> => {
-      const attachment: FileAttachment = {
-        id: crypto.randomUUID(),
-        name: file.name,
-        type: file.type,
-        size: file.size,
-      };
+const vectorStore = new VectorStoreService();
 
+export function useVectorSearch() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const search = useCallback(async (embedding: number[]) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const results = await vectorStore.search(embedding);
+      return results;
+    } catch (err) {
+      console.error("Vector search error:", err);
+      setError(
+        err instanceof Error ? err : new Error("Failed to search vectors")
+      );
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return {
+    search,
+    loading,
+    error,
+  };
+}
+
+export function useDocumentManagement() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const addDocument = useCallback(
+    async (content: string, metadata?: Record<string, any>) => {
       try {
-        // Create a blob URL for immediate preview
-        attachment.url = URL.createObjectURL(file);
-
-        // Simulate upload progress (replace with actual upload logic)
-        let progress = 0;
-        const interval = setInterval(() => {
-          progress += 10;
-          onProgress?.(progress);
-          if (progress >= 100) clearInterval(interval);
-        }, 100);
-
-        // Convert file to text if it's a supported type
-        if (file.type.startsWith("text/") || file.type === "application/json") {
-          const text = await file.text();
-          await vectorStore.add_documents([
-            {
-              pageContent: text,
-              metadata: {
-                filename: file.name,
-                filetype: file.type,
-                filesize: file.size,
-                attachment_id: attachment.id,
-              },
-            },
-          ]);
-        }
-
-        return attachment;
-      } catch (error) {
-        console.error("Failed to upload file:", error);
-        attachment.error = "Failed to upload file";
-        throw error;
+        setLoading(true);
+        setError(null);
+        await vectorStore.addDocument(content, metadata);
+      } catch (err) {
+        console.error("Document management error:", err);
+        setError(
+          err instanceof Error ? err : new Error("Failed to add document")
+        );
+        throw err;
+      } finally {
+        setLoading(false);
       }
     },
     []
   );
 
   return {
-    uploadFile,
+    addDocument,
+    loading,
+    error,
   };
 }

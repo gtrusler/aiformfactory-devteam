@@ -1,23 +1,31 @@
-import { ReactNode } from "react";
-import { Viewport } from "next";
-import { getSEOTags } from "@/libs/seo";
-import config from "@/config";
+import { type ReactNode } from "react";
+import { type Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/components/providers/theme-provider";
+import { Toaster } from "sonner";
 
-import "react-tooltip/dist/react-tooltip.css";
-import AppLayout from "@/components/app/AppLayout";
+const inter = Inter({ subsets: ["latin"] });
 
-export const viewport: Viewport = {
-  // Will use the primary color of your theme to show a nice theme color in the URL bar of supported browsers
-  themeColor: config.colors.main,
-  width: "device-width",
-  initialScale: 1,
+export const metadata: Metadata = {
+  title: "AI Form Factory",
+  description: "Create and manage forms with AI assistance",
 };
 
-// This adds default SEO tags to all pages in our app.
-// You can override them in each page passing params to getSOTags() function.
-export const metadata = getSEOTags();
-
 export default function RootLayout({ children }: { children: ReactNode }) {
-  return <AppLayout>{children}</AppLayout>;
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster />
+        </ThemeProvider>
+      </body>
+    </html>
+  );
 }

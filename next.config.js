@@ -2,12 +2,10 @@
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
-    appDir: true,
-    esmExternals: "loose"
+    esmExternals: "loose",
   },
   images: {
     domains: [
-      // NextJS <Image> component needs to whitelist domains for src={}
       "lh3.googleusercontent.com",
       "pbs.twimg.com",
       "images.unsplash.com",
@@ -15,7 +13,7 @@ const nextConfig = {
     ],
   },
   webpack: (config) => {
-    config.externals = [...config.externals, { canvas: "canvas" }];  // required to make Konva & react-konva work
+    config.externals = [...config.externals, { canvas: "canvas" }]; // required to make Konva & react-konva work
     return config;
   },
   async headers() {
@@ -24,8 +22,8 @@ const nextConfig = {
         source: "/",
         headers: [
           {
-            key: 'X-Robots-Tag',
-            value: 'index,follow',
+            key: "X-Robots-Tag",
+            value: "index,follow",
           },
         ],
       },
@@ -33,13 +31,13 @@ const nextConfig = {
         source: "/:path",
         headers: [
           {
-            key: 'X-Robots-Tag',
-            value: 'index,follow',
+            key: "X-Robots-Tag",
+            value: "index,follow",
           },
         ],
-      }
-    ]
-  }
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

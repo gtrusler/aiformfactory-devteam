@@ -26,32 +26,31 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
+import { toast } from "sonner";
+import { settingsSchema } from "@/lib/validations/forms";
+import type { Settings } from "@/lib/validations/forms";
+import { handleFormError } from "@/lib/utils/form";
 
-const settingsSchema = z.object({
-  openaiApiKey: z.string().min(1, "API key is required"),
-  geminiApiKey: z.string().min(1, "API key is required"),
-  defaultModel: z.enum(["gpt-4", "gemini-pro"]),
-  enableAutoSave: z.boolean(),
-  maxTokens: z.number().min(100).max(4000),
-});
-
-type SettingsValues = z.infer<typeof settingsSchema>;
-
-const defaultValues: Partial<SettingsValues> = {
+const defaultValues: Partial<Settings> = {
   defaultModel: "gpt-4",
   enableAutoSave: true,
   maxTokens: 2000,
 };
 
 export default function SettingsPage() {
-  const form = useForm<SettingsValues>({
+  const form = useForm<Settings>({
     resolver: zodResolver(settingsSchema),
     defaultValues,
   });
 
-  function onSubmit(data: SettingsValues) {
-    console.log(data);
+  async function onSubmit(data: Settings) {
+    try {
+      // TODO: Save settings to backend
+      console.log(data);
+      toast.success("Settings saved successfully");
+    } catch (error) {
+      handleFormError(error);
+    }
   }
 
   return (
