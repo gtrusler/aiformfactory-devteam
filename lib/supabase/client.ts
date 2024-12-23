@@ -10,10 +10,18 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
+    autoRefreshToken: true,
   },
   realtime: {
     params: {
       eventsPerSecond: 10,
+    },
+    heartbeat: {
+      interval: 5000,
+      timeout: 7000,
+    },
+    presence: {
+      key: "online_at",
     },
   },
   db: {
@@ -24,13 +32,17 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 // Debug real-time connection
 const channel = supabase.channel("system");
 channel
-  .on("system", { event: "*" }, (payload) => {
-    console.log("System event:", payload);
+  .on("presence", { event: "sync" }, () => {
+    console.log("System presence sync");
+  })
+  .on("presence", { event: "join" }, () => {
+    console.log("System presence join");
+  })
+  .on("presence", { event: "leave" }, () => {
+    console.log("System presence leave");
   })
   .subscribe((status) => {
-    if (status === "SUBSCRIBED") {
-      console.log("Connected to Supabase realtime");
-    }
+    console.log("System channel status:", status);
   });
 
 export type Json =
@@ -50,13 +62,14 @@ export interface ChatHistory {
   metadata: Json;
   parent_message_id: string | null;
   embedding: number[] | null;
+  speaker?: ChatSpeaker;
 }
 
 export interface ChatSpeaker {
   id: string;
   created_at: string;
   name: string;
-  role: string;
+  type: string;
   metadata: Json;
 }
 

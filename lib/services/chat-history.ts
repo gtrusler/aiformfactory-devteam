@@ -17,7 +17,7 @@ export class ChatHistoryService {
     metadata?: Record<string, any>;
   }): Promise<ChatHistory> {
     const { data, error } = await supabase
-      .from("n8n_chat_histories")
+      .from("chat_histories")
       .insert({
         id: uuidv4(),
         message,
@@ -35,7 +35,7 @@ export class ChatHistoryService {
 
   async getThreadMessages(threadId: string): Promise<ChatHistory[]> {
     const { data, error } = await supabase
-      .from("n8n_chat_histories")
+      .from("chat_histories")
       .select("*, speaker:chat_speakers(*)")
       .eq("thread_id", threadId)
       .order("created_at", { ascending: true });
@@ -49,7 +49,7 @@ export class ChatHistoryService {
     limit = 5
   ): Promise<ChatHistory[]> {
     const { data, error } = await supabase
-      .from("n8n_chat_histories")
+      .from("chat_histories")
       .select("*, speaker:chat_speakers(*)")
       .eq("parent_message_id", messageId)
       .order("created_at", { ascending: true })
@@ -70,7 +70,7 @@ export class ChatHistoryService {
         {
           event: "INSERT",
           schema: "public",
-          table: "n8n_chat_histories",
+          table: "chat_histories",
           filter: `thread_id=eq.${threadId}`,
         },
         (payload) => callback(payload.new as ChatHistory)
@@ -94,7 +94,7 @@ export class ChatHistoryService {
     metadata: Record<string, any>
   ): Promise<void> {
     const { error } = await supabase
-      .from("n8n_chat_histories")
+      .from("chat_histories")
       .update({ metadata })
       .eq("id", messageId);
 

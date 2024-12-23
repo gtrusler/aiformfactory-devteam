@@ -2,18 +2,32 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { type ChatMessage, type ChatParticipant } from "@/types/chat";
-import { FileIcon, XCircleIcon } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
+type SpeakerType = "human" | "assistant" | "system";
+
+interface Speaker {
+  id: string;
+  name: string;
+  type: SpeakerType;
+  metadata?: {
+    role?: string;
+    avatar?: string | null;
+  };
+}
+
 interface MessageProps {
-  message: ChatMessage;
-  participant: ChatParticipant;
+  message: {
+    content: string;
+    timestamp?: string;
+    isLoading?: boolean;
+  };
+  participant: Speaker;
   isLastMessage?: boolean;
 }
 
 export function Message({ message, participant, isLastMessage }: MessageProps) {
-  const isUser = participant.role === "user";
+  const isUser = participant.type === "human";
   const timestamp = message.timestamp
     ? formatDistanceToNow(new Date(message.timestamp), { addSuffix: true })
     : "";
@@ -26,7 +40,7 @@ export function Message({ message, participant, isLastMessage }: MessageProps) {
       )}
     >
       <Avatar className="h-8 w-8">
-        <AvatarImage src={participant.avatar} alt={participant.name} />
+        <AvatarImage src={participant.metadata?.avatar || undefined} alt={participant.name} />
         <AvatarFallback>
           {participant.name.slice(0, 2).toUpperCase()}
         </AvatarFallback>
@@ -49,44 +63,15 @@ export function Message({ message, participant, isLastMessage }: MessageProps) {
           <Card
             className={cn(
               "overflow-hidden",
-              isUser ? "bg-primary text-primary-foreground" : ""
+              isUser
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground"
             )}
           >
             <CardContent className="p-3">
-              {message.error ? (
-                <div className="flex items-center gap-2 text-destructive">
-                  <XCircleIcon className="h-4 w-4" />
-                  <span>{message.error}</span>
-                </div>
-              ) : (
-                <p className="whitespace-pre-wrap">{message.content}</p>
-              )}
+              <p className="whitespace-pre-wrap">{message.content}</p>
             </CardContent>
           </Card>
-        )}
-
-        {message.files && message.files.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {message.files.map((file) => (
-              <Card
-                key={file.id}
-                className={cn(
-                  "flex items-center gap-2 p-2",
-                  isUser ? "bg-primary text-primary-foreground" : ""
-                )}
-              >
-                <FileIcon className="h-4 w-4" />
-                <span className="text-sm">{file.name}</span>
-                {file.uploadProgress !== undefined &&
-                  file.uploadProgress < 100 && (
-                    <span className="text-xs">({file.uploadProgress}%)</span>
-                  )}
-                {file.error && (
-                  <XCircleIcon className="h-4 w-4 text-destructive" />
-                )}
-              </Card>
-            ))}
-          </div>
         )}
       </div>
     </div>
